@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using abc_bank;
+using System.Threading;
 
 namespace abc_bank_tests
 {
@@ -10,8 +11,8 @@ namespace abc_bank_tests
         [TestMethod]
         public void TestApp()
         {
-            Account checkingAccount = new Account(Account.CHECKING);
-            Account savingsAccount = new Account(Account.SAVINGS);
+            AbstractAccount checkingAccount = new CHECKINGAccount();// Account(Account.CHECKING);
+            AbstractAccount savingsAccount = new SAVINGSAccount();// Account(Account.SAVINGS);
 
             Customer henry = new Customer("Henry").OpenAccount(checkingAccount).OpenAccount(savingsAccount);
 
@@ -36,7 +37,7 @@ namespace abc_bank_tests
         [TestMethod]
         public void TestOneAccount()
         {
-            Customer oscar = new Customer("Oscar").OpenAccount(new Account(Account.SAVINGS));
+            Customer oscar = new Customer("Oscar").OpenAccount(new SAVINGSAccount());// Account(Account.SAVINGS));
             Assert.AreEqual(1, oscar.GetNumberOfAccounts());
         }
 
@@ -44,19 +45,63 @@ namespace abc_bank_tests
         public void TestTwoAccount()
         {
             Customer oscar = new Customer("Oscar")
-                 .OpenAccount(new Account(Account.SAVINGS));
-            oscar.OpenAccount(new Account(Account.CHECKING));
+                 .OpenAccount(new SAVINGSAccount());// Account(Account.SAVINGS));
+            oscar.OpenAccount(new CHECKINGAccount());// Account(Account.CHECKING));
             Assert.AreEqual(2, oscar.GetNumberOfAccounts());
         }
 
         [TestMethod]
-        [Ignore]
+        //[Ignore]
         public void TestThreeAccounts()
         {
             Customer oscar = new Customer("Oscar")
-                    .OpenAccount(new Account(Account.SAVINGS));
-            oscar.OpenAccount(new Account(Account.CHECKING));
+                    .OpenAccount(new SAVINGSAccount());// Account(Account.SAVINGS));
+            oscar.OpenAccount(new CHECKINGAccount());// Account(Account.CHECKING));
+            oscar.OpenAccount(new MAXI_SAVINGSAccount());
             Assert.AreEqual(3, oscar.GetNumberOfAccounts());
+        }
+
+
+        [TestMethod]
+        public void TestTransferFromChckingToSavings()
+        {
+            AbstractAccount checkingAccount = new CHECKINGAccount();// Account(Account.CHECKING);
+            AbstractAccount savingsAccount = new SAVINGSAccount();// Account(Account.SAVINGS);
+
+            Customer henry = new Customer("Bob").OpenAccount(checkingAccount).OpenAccount(savingsAccount);
+
+            checkingAccount.Deposit(1000.0);
+            savingsAccount.Deposit(100.0);
+
+            bool result = henry.Transfer(checkingAccount, savingsAccount, 300);
+
+
+            Assert.AreEqual(bool.TrueString, result.ToString());
+
+            Assert.AreEqual(700, checkingAccount.sumTransactions());
+
+            Assert.AreEqual(400, savingsAccount.sumTransactions());
+        }
+
+        [TestMethod]
+        public void TestTransferWhenNotEnoughMoney()
+        {
+            AbstractAccount checkingAccount = new CHECKINGAccount();// Account(Account.CHECKING);
+            AbstractAccount savingsAccount = new SAVINGSAccount();// Account(Account.SAVINGS);
+
+            Customer rich = new Customer("Rich").OpenAccount(checkingAccount).OpenAccount(checkingAccount);
+            rich.OpenAccount(checkingAccount).OpenAccount(savingsAccount);
+
+            checkingAccount.Deposit(10);
+            savingsAccount.Deposit(5);
+
+            bool result = rich.Transfer(checkingAccount, savingsAccount, 20);
+
+            Assert.AreEqual(bool.FalseString, result.ToString());
+
+            Assert.AreEqual(10, checkingAccount.sumTransactions());
+
+            Assert.AreEqual(5, savingsAccount.sumTransactions());
         }
     }
 }
